@@ -140,4 +140,4 @@ def update_flag(name):
     return jsonify({"message": f"Flag '{name}' atualizada"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
