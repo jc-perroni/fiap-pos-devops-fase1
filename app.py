@@ -4,16 +4,47 @@ from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+try:
+    import boto3
+except Exception: 
+    boto3 = None
+
 app = Flask(__name__)
 
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PORT = int(os.getenv("DB_PORT", "5432"))
+
+
+def get_ssm_parameter(name: str, *, region_name: str) -> str:
+    if boto3 is None:
+        raise RuntimeError("boto3 não está instalado; instale boto3 ou defina DB_PASSWORD via variável de ambiente")
+
+    ssm = boto3.client("ssm", region_name=region_name)
+    response = ssm.get_parameter(Name=name, WithDecryption=True)
+    return response["Parameter"]["Value"]
+
+
+def resolve_db_password() -> str | None:
+    password = os.getenv("DB_PASSWORD")
+    if password:
+        return password
+
+    ssm_param = os.getenv("DB_PASSWORD_SSM_PARAM")
+    if not ssm_param:
+        return None
+
+    region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION") or "sa-east-1"
+    return get_ssm_parameter(ssm_param, region_name=region)
+
+
+DB_PASSWORD = resolve_db_password()
 
 def get_db_connection():
     conn = psycopg2.connect(
         host=DB_HOST,
+        port=DB_PORT,
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD
