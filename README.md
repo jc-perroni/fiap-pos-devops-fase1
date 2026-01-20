@@ -202,6 +202,32 @@ Este guia assume que você já criou uma instância EC2 e um banco de dados RDS,
 
 > **Importante:** Lembre-se de configurar o **Security Group** da sua instância EC2 para permitir tráfego de entrada na porta `5001` (para a aplicação) e na porta `22` (para o SSH). O Security Group do RDS deve permitir tráfego na porta `5432` vindo do Security Group da sua EC2.
 
+### Deploy com Docker (EC2 + RDS)
+
+Este repositório possui dois arquivos de Compose:
+
+- `docker-compose.yaml`: uso local (sobe também um Postgres no Docker).
+- `docker-compose.ec2.yaml`: uso na EC2 apontando para um banco externo (ex.: RDS).
+
+1. Crie um arquivo `toggle.env` na raiz (você pode copiar de `.env.example`) e preencha:
+   - `DB_HOST` (ex.: `rds-togglemaster.cdkikocasxyi.sa-east-1.rds.amazonaws.com`)
+   - `DB_USER` (ex.: `togglemaster`)
+   - `DB_NAME`, `DB_PORT`
+   - `DB_PASSWORD_SSM_PARAM` (caminho do parâmetro no SSM, SecureString)
+   - `AWS_REGION` (ex.: `sa-east-1`)
+
+2. Suba somente a aplicação:
+
+   ```bash
+   docker compose -f docker-compose.ec2.yaml up --build -d
+   ```
+
+3. Verifique a saúde:
+
+   ```bash
+   curl http://localhost:5001/health
+   ```
+
 Escolha a opção correspondente ao sistema operacional da sua instância EC2.
 
 ### Opção A: Para Amazon Linux 2 ou Amazon Linux 2023

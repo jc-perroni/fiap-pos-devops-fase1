@@ -8,10 +8,13 @@
 # 5. Inicia o servidor Gunicorn.
 
 # Verifique se as variáveis de ambiente do banco de dados estão definidas
-if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_NAME" ]; then
-  echo "Erro: As variáveis de ambiente do banco de dados (DB_HOST, DB_PORT, DB_NAME) devem ser definidas."
+if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
+  echo "Erro: As variáveis de ambiente do banco de dados (DB_HOST, DB_PORT, DB_NAME, DB_USER) devem ser definidas."
   exit 1
 fi
+
+# Garante que o Flask CLI consiga localizar a aplicação
+export FLASK_APP=${FLASK_APP:-app}
 
 echo "Aguardando o banco de dados em ${DB_HOST}:${DB_PORT}..."
 
@@ -31,4 +34,4 @@ flask init-db
 
 # Inicia a aplicação principal (Gunicorn)
 echo "Iniciando o servidor Gunicorn..."
-exec gunicorn --bind 0.0.0.0:5001 app:app
+exec "$@"
