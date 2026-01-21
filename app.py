@@ -1,12 +1,13 @@
 import os
 import click
+from typing import Optional
 from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 try:
     import boto3
-except Exception: 
+except Exception:
     boto3 = None
 
 app = Flask(__name__)
@@ -26,7 +27,7 @@ def get_ssm_parameter(name: str, *, region_name: str) -> str:
     return response["Parameter"]["Value"]
 
 
-def resolve_db_password() -> str | None:
+def resolve_db_password() -> Optional[str]:
     password = os.getenv("DB_PASSWORD")
     if password:
         return password
@@ -39,15 +40,17 @@ def resolve_db_password() -> str | None:
     return get_ssm_parameter(ssm_param, region_name=region)
 
 
-DB_PASSWORD = resolve_db_password()
-
 def get_db_connection():
+    db_password = resolve_db_password()
+    if not db_password:
+        raise RuntimeError("Senha do DB não resolvida. Defina DB_PASSWORD ou DB_PASSWORD_SSM_PARAM (+ AWS_REGION).")
+
     conn = psycopg2.connect(
         host=DB_HOST,
         port=DB_PORT,
         database=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD
+        password=db_password
     )
     return conn
 
