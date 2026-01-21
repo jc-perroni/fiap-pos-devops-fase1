@@ -16,7 +16,7 @@ DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
-
+DB_SSLMODE = os.getenv("DB_SSLMODE", "require")
 
 def get_ssm_parameter(name: str, *, region_name: str) -> str:
     if boto3 is None:
@@ -50,7 +50,8 @@ def get_db_connection():
         port=DB_PORT,
         database=DB_NAME,
         user=DB_USER,
-        password=db_password
+        password=db_password,
+        sslmode=DB_SSLMODE,
     )
     return conn
 
